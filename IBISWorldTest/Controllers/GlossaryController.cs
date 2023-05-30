@@ -9,33 +9,40 @@ namespace IBISWorldTest.Controllers
     [ApiController]
     public class GlossaryController : ControllerBase
     {
-        private readonly GlossaryStore glossaryStore;
-
-        public GlossaryController()
-        {
-            glossaryStore = new GlossaryStore(); // In-memory storage for simplicity
-        }
-
         [HttpGet]
         public IActionResult GetAllTerms()
         {
-            var sortedTerms = glossaryStore.terms.OrderBy(t => t.Name).ToList();
+            var sortedTerms = GlossaryStore.terms.OrderBy(t => t.Name).ToList();
             return Ok(sortedTerms);
         }
 
         [HttpPost]
-        public IActionResult AddTerm(TermDTO term)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult AddTerm(TermDTO termDTO)
         {
+            if (termDTO == null)
+                return BadRequest(termDTO);
+            int lastId = GlossaryStore.terms.OrderByDescending(t => t.Id).FirstOrDefault().Id;
+            //if we reach to maximum capacity (this should not be the case if we use a database)
+            if (lastId == int.MaxValue)
+                return StatusCode(StatusCodes.Status500InternalServerError);
             // Generate a unique ID for the term
-            term.Id = glossaryStore.terms.Count + 1;
-            glossaryStore.terms.Add(term);
-            return CreatedAtAction(nameof(GetTermById), new { id = term.Id }, term);
+            termDTO.Id = lastId + 1;
+            GlossaryStore.terms.Add(termDTO);
+            return CreatedAtAction(nameof(GetTermById), new { id = termDTO.Id }, termDTO);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}", Name ="GetTerm")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetTermById(int id)
         {
-            var term = glossaryStore.terms.FirstOrDefault(t => t.Id == id);
+            if (id <= 0)
+                return BadRequest();
+            var term = GlossaryStore.terms.FirstOrDefault(t => t.Id == id);
             if (term == null)
                 return NotFound();
             return Ok(term);
@@ -44,7 +51,7 @@ namespace IBISWorldTest.Controllers
         [HttpPut("{id}")]
         public IActionResult UpdateTerm(int id, Term term)
         {
-            var existingTerm = glossaryStore.terms.FirstOrDefault(t => t.Id == id);
+            var existingTerm = GlossaryStore.terms.FirstOrDefault(t => t.Id == id);
             if (existingTerm == null)
                 return NotFound();
 
@@ -57,11 +64,11 @@ namespace IBISWorldTest.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeleteTerm(int id)
         {
-            var term = glossaryStore.terms.FirstOrDefault(t => t.Id == id);
+            var term = GlossaryStore.terms.FirstOrDefault(t => t.Id == id);
             if (term == null)
                 return NotFound();
 
-            glossaryStore.terms.Remove(term);
+            GlossaryStore.terms.Remove(term);
             return NoContent();
         }
     }

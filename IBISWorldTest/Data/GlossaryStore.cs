@@ -2,9 +2,9 @@
 
 namespace IBISWorldTest.Data
 {
-    public class GlossaryStore
+    public static class GlossaryStore
     {
-        public List<TermDTO> terms = new()
+        public static List<TermDTO> terms = new()
         {
             new TermDTO{ Id = 1, Name = "Coding", Definition = "Practice of writing program"},
             new TermDTO{ Id = 2, Name = "Ibis", Definition = "A great company to work"},
