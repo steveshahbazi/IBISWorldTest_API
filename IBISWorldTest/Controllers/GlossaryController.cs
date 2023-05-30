@@ -24,6 +24,10 @@ namespace IBISWorldTest.Controllers
         {
             if (termDTO == null)
                 return BadRequest(termDTO);
+            if (GlossaryStore.terms.FirstOrDefault(t => t.Name?.ToLower() == termDTO.Name) != null)
+                ModelState.AddModelError("CustomError", "Term already exists.");
+            if(!ModelState.IsValid)
+                return BadRequest(ModelState);
             int lastId = GlossaryStore.terms.OrderByDescending(t => t.Id).FirstOrDefault().Id;
             //if we reach to maximum capacity (this should not be the case if we use a database)
             if (lastId == int.MaxValue)
@@ -48,22 +52,34 @@ namespace IBISWorldTest.Controllers
             return Ok(term);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult UpdateTerm(int id, Term term)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpPut("{id:int}", Name = "UpdateTerm")]
+        public IActionResult UpdateTerm(int id, [FromBody]TermDTO termDto)
         {
+            if(termDto == null || id != termDto.Id)
+                return BadRequest();
             var existingTerm = GlossaryStore.terms.FirstOrDefault(t => t.Id == id);
             if (existingTerm == null)
                 return NotFound();
 
-            existingTerm.Name = term.Name;
-            existingTerm.Definition = term.Definition;
+            existingTerm.Name = termDto.Name;
+            existingTerm.Definition = termDto.Definition;
 
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpDelete("{id:int}", Name ="DeleteTerm")]
         public IActionResult DeleteTerm(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest();
+            }
             var term = GlossaryStore.terms.FirstOrDefault(t => t.Id == id);
             if (term == null)
                 return NotFound();
