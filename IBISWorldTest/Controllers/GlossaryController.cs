@@ -15,6 +15,7 @@ namespace IBISWorldTest.Controllers
         {
             _logger = logger;
         }
+
         [HttpGet]
         public IActionResult GetAllTerms()
         {
