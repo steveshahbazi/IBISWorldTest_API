@@ -2,6 +2,7 @@
 using IBISWorldTest.Models;
 using IBISWorldTest.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace IBISWorldTest.Controllers
 {
@@ -9,18 +10,20 @@ namespace IBISWorldTest.Controllers
     [ApiController]
     public class GlossaryController : ControllerBase
     {
-        public ILogger<GlossaryController> _logger { get; }
+        private readonly ILogger<GlossaryController> _logger;
+        private readonly ApplicationDBContext _db;
 
-        public GlossaryController(ILogger<GlossaryController> logger)
+        public GlossaryController(ApplicationDBContext db, ILogger<GlossaryController> logger)
         {
+            _db = db;
             _logger = logger;
         }
 
         [HttpGet]
-        public IActionResult GetAllTerms()
+        public async Task<IActionResult> GetAllTerms()
         {
             _logger.LogInformation("Getting all terms");
-            var sortedTerms = GlossaryStore.terms.OrderBy(t => t.Name).ToList();
+            var sortedTerms = await _db.Terms.OrderBy(t => t.Name).ToListAsync();
             return Ok(sortedTerms);
         }
 
@@ -28,42 +31,49 @@ namespace IBISWorldTest.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public IActionResult AddTerm(TermDTO termDTO)
+        public async Task<IActionResult> AddTerm(TermDTO termDTO)
         {
             if (termDTO == null)
             {
                 _logger.LogError("Add Term Error, null object is passed.");
                 return BadRequest(termDTO);
             }
-            if (GlossaryStore.terms.FirstOrDefault(t => t.Name?.ToLower() == termDTO.Name) != null)
+            if (await _db.Terms.FirstOrDefaultAsync(t => t.Name != null && t.Name.ToLower() == termDTO.Name) != null)
             {
                 _logger.LogError("Add Term Error, Term already exists.");
                 ModelState.AddModelError("CustomError", "Term already exists.");
             }
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
+            {
                 return BadRequest(ModelState);
-            int lastId = GlossaryStore.terms.OrderByDescending(t => t.Id).FirstOrDefault().Id;
-            //if we reach to maximum capacity (this should not be the case if we use a database)
-            if (lastId == int.MaxValue)
+            }
+
+            var item = await _db.Terms.OrderByDescending(t => t.Id).FirstOrDefaultAsync();
+            //if we reach to maximum capacity 
+            if (item != null && item.Id == int.MaxValue)
             {
                 _logger.LogError("Add Term Error, maximum id reached.");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-            // Generate a unique ID for the term
-            termDTO.Id = lastId + 1;
-            GlossaryStore.terms.Add(termDTO);
-            return CreatedAtAction(nameof(GetTermById), new { id = termDTO.Id }, termDTO);
+
+            _db.Terms.Add(new Term() { 
+                Name = termDTO.Name,
+                Definition = termDTO.Definition,
+            });
+            await _db.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetTermById), new { id = item?.Id }, item);
         }
 
         [HttpGet("{id:int}", Name ="GetTerm")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetTermById(int id)
+        public async Task<IActionResult> GetTermById(int id)
         {
             if (id <= 0)
                 return BadRequest();
-            var term = GlossaryStore.terms.FirstOrDefault(t => t.Id == id);
+            var term = await _db.Terms.FirstOrDefaultAsync(t => t.Id == id);
             if (term == null)
                 return NotFound();
             return Ok(term);
@@ -73,16 +83,18 @@ namespace IBISWorldTest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{id:int}", Name = "UpdateTerm")]
-        public IActionResult UpdateTerm(int id, [FromBody]TermDTO termDto)
+        public async Task<IActionResult> UpdateTerm(int id, [FromBody]TermDTO termDto)
         {
             if(termDto == null || id != termDto.Id)
                 return BadRequest();
-            var existingTerm = GlossaryStore.terms.FirstOrDefault(t => t.Id == id);
+            var existingTerm = await _db.Terms.FirstOrDefaultAsync(t => t.Id == id);
             if (existingTerm == null)
                 return NotFound();
 
             existingTerm.Name = termDto.Name;
             existingTerm.Definition = termDto.Definition;
+            _db.Update(existingTerm);
+            await _db.SaveChangesAsync();
 
             return NoContent();
         }
@@ -91,17 +103,18 @@ namespace IBISWorldTest.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpDelete("{id:int}", Name ="DeleteTerm")]
-        public IActionResult DeleteTerm(int id)
+        public async Task<IActionResult> DeleteTerm(int id)
         {
             if (id <= 0)
             {
                 return BadRequest();
             }
-            var term = GlossaryStore.terms.FirstOrDefault(t => t.Id == id);
+            var term = await _db.Terms.FirstOrDefaultAsync(t => t.Id == id);
             if (term == null)
                 return NotFound();
 
-            GlossaryStore.terms.Remove(term);
+            _db.Terms.Remove(term);
+            await _db.SaveChangesAsync();
             return NoContent();
         }
     }
