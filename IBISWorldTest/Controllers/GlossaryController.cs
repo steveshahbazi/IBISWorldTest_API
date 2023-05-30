@@ -9,9 +9,16 @@ namespace IBISWorldTest.Controllers
     [ApiController]
     public class GlossaryController : ControllerBase
     {
+        public ILogger<GlossaryController> _logger { get; }
+
+        public GlossaryController(ILogger<GlossaryController> logger)
+        {
+            _logger = logger;
+        }
         [HttpGet]
         public IActionResult GetAllTerms()
         {
+            _logger.LogInformation("Getting all terms");
             var sortedTerms = GlossaryStore.terms.OrderBy(t => t.Name).ToList();
             return Ok(sortedTerms);
         }
@@ -23,15 +30,24 @@ namespace IBISWorldTest.Controllers
         public IActionResult AddTerm(TermDTO termDTO)
         {
             if (termDTO == null)
+            {
+                _logger.LogError("Add Term Error, null object is passed.");
                 return BadRequest(termDTO);
+            }
             if (GlossaryStore.terms.FirstOrDefault(t => t.Name?.ToLower() == termDTO.Name) != null)
+            {
+                _logger.LogError("Add Term Error, Term already exists.");
                 ModelState.AddModelError("CustomError", "Term already exists.");
+            }
             if(!ModelState.IsValid)
                 return BadRequest(ModelState);
             int lastId = GlossaryStore.terms.OrderByDescending(t => t.Id).FirstOrDefault().Id;
             //if we reach to maximum capacity (this should not be the case if we use a database)
             if (lastId == int.MaxValue)
+            {
+                _logger.LogError("Add Term Error, maximum id reached.");
                 return StatusCode(StatusCodes.Status500InternalServerError);
+            }
             // Generate a unique ID for the term
             termDTO.Id = lastId + 1;
             GlossaryStore.terms.Add(termDTO);
