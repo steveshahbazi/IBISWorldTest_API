@@ -1,7 +1,13 @@
+using IbisWorld_Web.Services;
+using IbisWorld_Web.Services.IServices;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddHttpClient<IGlossaryService, GlossaryService>();
+builder.Services.AddScoped<IGlossaryService, GlossaryService>();
 
 var app = builder.Build();
 

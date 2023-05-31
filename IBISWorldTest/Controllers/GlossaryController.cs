@@ -9,7 +9,7 @@ using System.Net;
 
 namespace IBISWorldTest.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/glossaryAPI")]
     [ApiController]
     public class GlossaryController : ControllerBase
     {

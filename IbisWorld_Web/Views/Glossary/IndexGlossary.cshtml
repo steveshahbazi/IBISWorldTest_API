@@ -1,0 +1,43 @@
+﻿@model IEnumerable<TermDTO>
+<br />
+<div class="container p-4 border">
+    <div class="row pb-2">
+        <div class="col">
+            <h1 class="text-primary">Term List</h1>
+        </div>
+        <div class="col text-end pt-1">
+            <a asp-controller="Glossary" asp-action="CreateTerm" class="btn btn-outline-primary"><i class="bi bi-file-plus-fill"></i>Create New Term</a>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Term
+                </th>
+                <th>
+                    Definition
+                </th>
+                <th/>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <th>
+                        @item.Name
+                    </th>
+                    <th>
+                        @item.Definition
+                    </th>
+                    <th>
+                        <a asp-controller="Glossary" asp-action="UpdateTerm" class="btn btn-success"><i class="bi bi-pencil-fill"></i></a>
+                        <a asp-controller="Glossary" asp-action="DeleteTerm" class="btn btn-danger"><i class="bi bi-trash-fill"></i></a>
+                    </th>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
