@@ -1,6 +1,7 @@
 ﻿using IBISWorldTest.Data;
 using IBISWorldTest.Models;
 using IBISWorldTest.Models.DTO;
+using IBISWorldTest.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,11 +12,11 @@ namespace IBISWorldTest.Controllers
     public class GlossaryController : ControllerBase
     {
         private readonly ILogger<GlossaryController> _logger;
-        private readonly ApplicationDBContext _db;
+        private readonly ITermRepository _dbTerm;
 
-        public GlossaryController(ApplicationDBContext db, ILogger<GlossaryController> logger)
+        public GlossaryController(ITermRepository dbTerm, ILogger<GlossaryController> logger)
         {
-            _db = db;
+            _dbTerm = dbTerm;
             _logger = logger;
         }
 
@@ -23,8 +24,8 @@ namespace IBISWorldTest.Controllers
         public async Task<IActionResult> GetAllTerms()
         {
             _logger.LogInformation("Getting all terms");
-            var sortedTerms = await _db.Terms.OrderBy(t => t.Name).ToListAsync();
-            return Ok(sortedTerms);
+            var sortedTerms = await _dbTerm.GetAllAsync();
+            return Ok(sortedTerms.OrderBy(t => t.Name));
         }
 
         [HttpPost]
@@ -38,7 +39,7 @@ namespace IBISWorldTest.Controllers
                 _logger.LogError("Add Term Error, null object is passed.");
                 return BadRequest(termDTO);
             }
-            if (await _db.Terms.FirstOrDefaultAsync(t => t.Name != null && t.Name.ToLower() == termDTO.Name) != null)
+            if (await _dbTerm.GetAsync(t => t.Name != null && t.Name.ToLower() == termDTO.Name) != null)
             {
                 _logger.LogError("Add Term Error, Term already exists.");
                 ModelState.AddModelError("CustomError", "Term already exists.");
@@ -48,7 +49,7 @@ namespace IBISWorldTest.Controllers
                 return BadRequest(ModelState);
             }
 
-            var item = await _db.Terms.OrderByDescending(t => t.Id).FirstOrDefaultAsync();
+            var item = await _dbTerm.GetAsync(t => true, false);
             //if we reach to maximum capacity 
             if (item != null && item.Id == int.MaxValue)
             {
@@ -56,11 +57,11 @@ namespace IBISWorldTest.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            _db.Terms.Add(new Term() { 
+            await _dbTerm.CreateAsync(new Term()
+            {
                 Name = termDTO.Name,
                 Definition = termDTO.Definition,
             });
-            await _db.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetTermById), new { id = item?.Id }, item);
         }
@@ -73,7 +74,7 @@ namespace IBISWorldTest.Controllers
         {
             if (id <= 0)
                 return BadRequest();
-            var term = await _db.Terms.FirstOrDefaultAsync(t => t.Id == id);
+            var term = await _dbTerm.GetAsync(t => t.Id == id);
             if (term == null)
                 return NotFound();
             return Ok(term);
@@ -87,14 +88,13 @@ namespace IBISWorldTest.Controllers
         {
             if(termDto == null || id != termDto.Id)
                 return BadRequest();
-            var existingTerm = await _db.Terms.FirstOrDefaultAsync(t => t.Id == id);
+            var existingTerm = await _dbTerm.GetAsync(t => t.Id == id);
             if (existingTerm == null)
                 return NotFound();
 
             existingTerm.Name = termDto.Name;
             existingTerm.Definition = termDto.Definition;
-            _db.Update(existingTerm);
-            await _db.SaveChangesAsync();
+            await _dbTerm.UpdateAsync(existingTerm);
 
             return NoContent();
         }
@@ -109,12 +109,12 @@ namespace IBISWorldTest.Controllers
             {
                 return BadRequest();
             }
-            var term = await _db.Terms.FirstOrDefaultAsync(t => t.Id == id);
+            var term = await _dbTerm.GetAsync(t => t.Id == id);
             if (term == null)
                 return NotFound();
 
-            _db.Terms.Remove(term);
-            await _db.SaveChangesAsync();
+            await _dbTerm.RemoveAsync(term);
+
             return NoContent();
         }
     }
