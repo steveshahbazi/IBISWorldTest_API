@@ -1,11 +1,12 @@
 ﻿@model TermDTO
 
-<form asp-action="CreateTerm">
-    <br/>
+<form asp-action="UpdateTerm">
+    <br />
     <div class="container border p-3">
-        <h1 class="text-primary">Create Term</h1>
+        <h1 class="text-primary">Update Term</h1>
         <br />
 
+        <input hidden asp-for="Id" />
         <div class="row">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
@@ -13,7 +14,7 @@
                 <label asp-for="Name" class="control-label pt-2" style="font-size:20px;"></label>
             </div>
             <div class="col-10 pb-3">
-                <input asp-for="Name" class="form-control"/> 
+                <input asp-for="Name" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
 
@@ -29,7 +30,7 @@
                 <a asp-action="IndexGlossary" asp-controller="Glossary" class="btn-primary btn form-control">Back to Glossary</a>
             </div>
             <div class="col-5">
-                <input type="submit" value="Create" class="btn btn-success form-control" />
+                <input type="submit" value="Update" class="btn btn-success form-control" />
             </div>
         </div>
     </div>

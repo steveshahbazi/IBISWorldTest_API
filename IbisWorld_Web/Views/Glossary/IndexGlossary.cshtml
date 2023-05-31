@@ -33,8 +33,8 @@
                         @item.Definition
                     </th>
                     <th>
-                        <a asp-controller="Glossary" asp-action="UpdateTerm" class="btn btn-success"><i class="bi bi-pencil-fill"></i></a>
-                        <a asp-controller="Glossary" asp-action="DeleteTerm" class="btn btn-danger"><i class="bi bi-trash-fill"></i></a>
+                        <a asp-controller="Glossary" asp-action="UpdateTerm" asp-route-termId="@item.Id" class="btn btn-success"><i class="bi bi-pencil-fill"></i></a>
+                        <a asp-controller="Glossary" asp-action="DeleteTerm" asp-route-termId="@item.Id" class="btn btn-danger"><i class="bi bi-trash-fill"></i></a>
                     </th>
                 </tr>
             }
