@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33502.453
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IBISWorldTest", "IBISWorldTest\IBISWorldTest.csproj", "{0410AAA3-FC71-49AC-8E36-01BE4F4FD783}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IBISWorldTest", "IBISWorldTest\IBISWorldTest.csproj", "{0410AAA3-FC71-49AC-8E36-01BE4F4FD783}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IbisWorld_Web", "IbisWorld_Web\IbisWorld_Web.csproj", "{756B05CB-42FF-4B99-A1EC-B29111D59384}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{0410AAA3-FC71-49AC-8E36-01BE4F4FD783}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0410AAA3-FC71-49AC-8E36-01BE4F4FD783}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0410AAA3-FC71-49AC-8E36-01BE4F4FD783}.Release|Any CPU.Build.0 = Release|Any CPU
+		{756B05CB-42FF-4B99-A1EC-B29111D59384}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{756B05CB-42FF-4B99-A1EC-B29111D59384}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{756B05CB-42FF-4B99-A1EC-B29111D59384}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{756B05CB-42FF-4B99-A1EC-B29111D59384}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
