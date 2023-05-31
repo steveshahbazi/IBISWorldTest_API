@@ -3,13 +3,8 @@ using System.Linq.Expressions;
 
 namespace IBISWorldTest.Repository.IRepository
 {
-    public interface ITermRepository
+    public interface ITermRepository : IRepository<Term>
     {
-        Task<List<Term>> GetAllAsync(Expression<Func<Term, bool>>? filter = null);
-        Task<Term> GetAsync(Expression<Func<Term, bool>>? filter = null, bool tracked = true);
-        Task CreateAsync(Term term);
-        Task RemoveAsync(Term term);
-        Task UpdateAsync(Term term);
-        Task SaveAsync();
+        Task<Term> UpdateAsync(Term term);
     }
 }

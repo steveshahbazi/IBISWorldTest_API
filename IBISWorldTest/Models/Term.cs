@@ -10,5 +10,7 @@ namespace IBISWorldTest.Models
         public int Id { get; set; }
         public string? Name { get; set; }
         public string? Definition { get; set; }
+        public DateTime? CreationDate { get; set; }
+        public DateTime? UpdatedDate { get; set; }
     }
 }

@@ -59,6 +59,7 @@ namespace IBISWorldTest.Controllers
 
             await _dbTerm.CreateAsync(new Term()
             {
+                CreationDate = DateTime.UtcNow,
                 Name = termDTO.Name,
                 Definition = termDTO.Definition,
             });
