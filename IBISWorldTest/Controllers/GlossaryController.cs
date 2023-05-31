@@ -1,4 +1,5 @@
-﻿using IBISWorldTest.Data;
+﻿using AutoMapper;
+using IBISWorldTest.Data;
 using IBISWorldTest.Models;
 using IBISWorldTest.Models.DTO;
 using IBISWorldTest.Repository.IRepository;
@@ -11,35 +12,39 @@ namespace IBISWorldTest.Controllers
     [ApiController]
     public class GlossaryController : ControllerBase
     {
+        protected APIResponse _response;
         private readonly ILogger<GlossaryController> _logger;
+        private readonly IMapper _mapper;
         private readonly ITermRepository _dbTerm;
 
-        public GlossaryController(ITermRepository dbTerm, ILogger<GlossaryController> logger)
+        public GlossaryController(ITermRepository dbTerm, ILogger<GlossaryController> logger, IMapper mapper)
         {
             _dbTerm = dbTerm;
             _logger = logger;
+            _mapper = mapper;
+            _response = new APIResponse();
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllTerms()
         {
             _logger.LogInformation("Getting all terms");
-            var sortedTerms = await _dbTerm.GetAllAsync();
-            return Ok(sortedTerms.OrderBy(t => t.Name));
+            var terms = await _dbTerm.GetAllAsync();
+            return Ok(_mapper.Map<List<TermDTO>>(terms.OrderBy(t => t.Name)));
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> AddTerm(TermDTO termDTO)
+        public async Task<IActionResult> AddTerm(TermDTO createTermDTO)
         {
-            if (termDTO == null)
+            if (createTermDTO == null)
             {
                 _logger.LogError("Add Term Error, null object is passed.");
-                return BadRequest(termDTO);
+                return BadRequest(createTermDTO);
             }
-            if (await _dbTerm.GetAsync(t => t.Name != null && t.Name.ToLower() == termDTO.Name) != null)
+            if (await _dbTerm.GetAsync(t => t.Name != null && t.Name.ToLower() == createTermDTO.Name) != null)
             {
                 _logger.LogError("Add Term Error, Term already exists.");
                 ModelState.AddModelError("CustomError", "Term already exists.");
@@ -49,22 +54,20 @@ namespace IBISWorldTest.Controllers
                 return BadRequest(ModelState);
             }
 
-            var item = await _dbTerm.GetAsync(t => true, false);
+            var latestTerm = await _dbTerm.GetAsync(t => true, false);
             //if we reach to maximum capacity 
-            if (item != null && item.Id == int.MaxValue)
+            if (latestTerm != null && latestTerm.Id == int.MaxValue)
             {
                 _logger.LogError("Add Term Error, maximum id reached.");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            await _dbTerm.CreateAsync(new Term()
-            {
-                CreationDate = DateTime.UtcNow,
-                Name = termDTO.Name,
-                Definition = termDTO.Definition,
-            });
+            var model = _mapper.Map<Term>(createTermDTO);
+            model.CreationDate = DateTime.UtcNow;
 
-            return CreatedAtAction(nameof(GetTermById), new { id = item?.Id }, item);
+            await _dbTerm.CreateAsync(model);
+
+            return CreatedAtAction(nameof(GetTermById), new { id = model?.Id }, model);
         }
 
         [HttpGet("{id:int}", Name ="GetTerm")]
@@ -78,24 +81,23 @@ namespace IBISWorldTest.Controllers
             var term = await _dbTerm.GetAsync(t => t.Id == id);
             if (term == null)
                 return NotFound();
-            return Ok(term);
+            return Ok(_mapper.Map<TermDTO>(term));
         }
 
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{id:int}", Name = "UpdateTerm")]
-        public async Task<IActionResult> UpdateTerm(int id, [FromBody]TermDTO termDto)
+        public async Task<IActionResult> UpdateTerm(int id, [FromBody]TermDTO updateTermDto)
         {
-            if(termDto == null || id != termDto.Id)
+            if(updateTermDto == null || id != updateTermDto.Id)
                 return BadRequest();
-            var existingTerm = await _dbTerm.GetAsync(t => t.Id == id);
+            var existingTerm = await _dbTerm.GetAsync(t => t.Id == id, tracked:false);
             if (existingTerm == null)
                 return NotFound();
 
-            existingTerm.Name = termDto.Name;
-            existingTerm.Definition = termDto.Definition;
-            await _dbTerm.UpdateAsync(existingTerm);
+            var model = _mapper.Map<Term>(updateTermDto);
+            await _dbTerm.UpdateAsync(model);
 
             return NoContent();
         }
