@@ -43,6 +43,11 @@ namespace IbisWorld_Web.Controllers
                 {
                     return RedirectToAction("IndexGlossary");
                 }
+                else
+                {
+                    if(response.ErrorMessages.Count > 0)
+                        ModelState.AddModelError("ErrorMessages", response.ErrorMessages.FirstOrDefault());
+                }
             }
 
             return View(model);

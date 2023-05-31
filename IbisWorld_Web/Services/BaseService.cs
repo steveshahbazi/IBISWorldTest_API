@@ -54,9 +54,17 @@ namespace IbisWorld_Web.Services
 
                 HttpResponseMessage apiResponse = null;
                 apiResponse = await client.SendAsync(message);
-                var apiContent = await apiResponse.Content.ReadAsStringAsync();
-                var APIResponse = JsonConvert.DeserializeObject<T>(apiContent);
-                return APIResponse;
+                if (apiResponse != null)
+                {
+                    var apiContent = await apiResponse.Content.ReadAsStringAsync();
+                    var APIResponse = JsonConvert.DeserializeObject<T>(apiContent);
+                    if (!apiResponse.IsSuccessStatusCode)
+                        throw new Exception($"Request cannot be done: {apiContent}");
+
+                    return APIResponse;
+                }
+                else
+                    throw new Exception("Response is null");
             }
             catch (Exception ex)
             {

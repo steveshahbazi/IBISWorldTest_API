@@ -1,32 +1,30 @@
 ﻿using IbisWorld_Web.Models;
+using IbisWorld_Web.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Diagnostics;
 
 namespace IbisWorld_Web.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly IGlossaryService _glossaryService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IGlossaryService glossaryService)
         {
-            _logger = logger;
+            _glossaryService = glossaryService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
-        }
+            List<TermDTO> list = new();
+            var response = await _glossaryService.GetAllAsync<APIResponse>();
+            if (response != null && response.IsSuccess)
+            {
+                list = JsonConvert.DeserializeObject<List<TermDTO>>(Convert.ToString(response.Result));
+            }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(list);
         }
     }
 }
