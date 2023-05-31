@@ -5,6 +5,7 @@ using IBISWorldTest.Models.DTO;
 using IBISWorldTest.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace IBISWorldTest.Controllers
 {
@@ -26,99 +27,173 @@ namespace IBISWorldTest.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllTerms()
+        public async Task<ActionResult<APIResponse>> GetAllTerms()
         {
-            _logger.LogInformation("Getting all terms");
-            var terms = await _dbTerm.GetAllAsync();
-            return Ok(_mapper.Map<List<TermDTO>>(terms.OrderBy(t => t.Name)));
+            try
+            {
+                _logger.LogInformation("Getting all terms");
+                var terms = await _dbTerm.GetAllAsync();
+                _response.Result = _mapper.Map<List<TermDTO>>(terms.OrderBy(t => t.Name));
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { ex.Message };
+            }
+            return _response;
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> AddTerm(TermDTO createTermDTO)
+        public async Task<ActionResult<APIResponse>> AddTerm(TermDTO createTermDTO)
         {
-            if (createTermDTO == null)
+            try
             {
-                _logger.LogError("Add Term Error, null object is passed.");
-                return BadRequest(createTermDTO);
+                if (createTermDTO == null)
+                {
+                    _logger.LogError("Add Term Error, null object is passed.");
+                    return BadRequest(createTermDTO);
+                }
+                if (await _dbTerm.GetAsync(t => t.Name != null && t.Name.ToLower() == createTermDTO.Name) != null)
+                {
+                    _logger.LogError("Add Term Error, Term already exists.");
+                    ModelState.AddModelError("CustomError", "Term already exists.");
+                }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var latestTerm = await _dbTerm.GetAsync(t => true, false);
+                //if we reach to maximum capacity 
+                if (latestTerm != null && latestTerm.Id == int.MaxValue)
+                {
+                    _logger.LogError("Add Term Error, maximum id reached.");
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
+
+                var model = _mapper.Map<Term>(createTermDTO);
+                model.CreationDate = DateTime.UtcNow;
+                await _dbTerm.CreateAsync(model);
+
+                _response.Result = _mapper.Map<TermDTO>(model);
+                _response.StatusCode = HttpStatusCode.Created;
+                return CreatedAtAction(nameof(GetTermById), new { id = model?.Id }, _response);
             }
-            if (await _dbTerm.GetAsync(t => t.Name != null && t.Name.ToLower() == createTermDTO.Name) != null)
+            catch (Exception ex)
             {
-                _logger.LogError("Add Term Error, Term already exists.");
-                ModelState.AddModelError("CustomError", "Term already exists.");
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { ex.Message };
             }
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var latestTerm = await _dbTerm.GetAsync(t => true, false);
-            //if we reach to maximum capacity 
-            if (latestTerm != null && latestTerm.Id == int.MaxValue)
-            {
-                _logger.LogError("Add Term Error, maximum id reached.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-
-            var model = _mapper.Map<Term>(createTermDTO);
-            model.CreationDate = DateTime.UtcNow;
-
-            await _dbTerm.CreateAsync(model);
-
-            return CreatedAtAction(nameof(GetTermById), new { id = model?.Id }, model);
+            return _response;
         }
 
-        [HttpGet("{id:int}", Name ="GetTerm")]
+        [HttpGet("{id:int}", Name = "GetTerm")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetTermById(int id)
+        public async Task<ActionResult<APIResponse>> GetTermById(int id)
         {
-            if (id <= 0)
-                return BadRequest();
-            var term = await _dbTerm.GetAsync(t => t.Id == id);
-            if (term == null)
-                return NotFound();
-            return Ok(_mapper.Map<TermDTO>(term));
+            try
+            {
+                if (id <= 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
+
+                var term = await _dbTerm.GetAsync(t => t.Id == id);
+                if (term == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    return BadRequest(_response);
+                }
+
+                _response.Result = _mapper.Map<TermDTO>(term);
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { ex.Message };
+            }
+            return _response;
         }
 
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpPut("{id:int}", Name = "UpdateTerm")]
-        public async Task<IActionResult> UpdateTerm(int id, [FromBody]TermDTO updateTermDto)
+        public async Task<ActionResult<APIResponse>> UpdateTerm(int id, [FromBody] TermDTO updateTermDto)
         {
-            if(updateTermDto == null || id != updateTermDto.Id)
-                return BadRequest();
-            var existingTerm = await _dbTerm.GetAsync(t => t.Id == id, tracked:false);
-            if (existingTerm == null)
-                return NotFound();
+            try
+            {
+                if (updateTermDto == null || id != updateTermDto.Id)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
 
-            var model = _mapper.Map<Term>(updateTermDto);
-            await _dbTerm.UpdateAsync(model);
+                var existingTerm = await _dbTerm.GetAsync(t => t.Id == id, tracked: false);
+                if (existingTerm == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    return BadRequest(_response);
+                }
 
-            return NoContent();
+                var model = _mapper.Map<Term>(updateTermDto);
+                await _dbTerm.UpdateAsync(model);
+
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
+            }
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { ex.Message };
+            }
+            return _response;
         }
 
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpDelete("{id:int}", Name ="DeleteTerm")]
-        public async Task<IActionResult> DeleteTerm(int id)
+        [HttpDelete("{id:int}", Name = "DeleteTerm")]
+        public async Task<ActionResult<APIResponse>> DeleteTerm(int id)
         {
-            if (id <= 0)
+            try
             {
-                return BadRequest();
+                if (id <= 0)
+                {
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
+
+                var term = await _dbTerm.GetAsync(t => t.Id == id);
+                if (term == null)
+                {
+                    _response.StatusCode = HttpStatusCode.NotFound;
+                    return BadRequest(_response);
+                }
+
+                await _dbTerm.RemoveAsync(term);
+
+                _response.StatusCode = HttpStatusCode.NoContent;
+                _response.IsSuccess = true;
+                return Ok(_response);
             }
-            var term = await _dbTerm.GetAsync(t => t.Id == id);
-            if (term == null)
-                return NotFound();
-
-            await _dbTerm.RemoveAsync(term);
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                _response.IsSuccess = false;
+                _response.ErrorMessages = new List<string> { ex.Message };
+            }
+            return _response;
         }
     }
 }
