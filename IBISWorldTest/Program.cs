@@ -1,7 +1,7 @@
-using IBISWorldTest;
-using IBISWorldTest.Data;
-using IBISWorldTest.Repository;
-using IBISWorldTest.Repository.IRepository;
+using IBISWorld_API;
+using IBISWorld_API.Data;
+using IBISWorld_API.Repository;
+using IBISWorld_API.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

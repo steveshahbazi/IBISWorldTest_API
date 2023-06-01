@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
-using IBISWorldTest.Models;
-using IBISWorldTest.Models.DTO;
+using IBISWorld_API.Models;
+using IBISWorld_API.Models.DTO;
 
-namespace IBISWorldTest
+namespace IBISWorld_API
 {
     public class MappingConfig : Profile
     {

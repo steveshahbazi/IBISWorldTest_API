@@ -1,9 +1,9 @@
-﻿using IBISWorldTest.Models;
-using IBISWorldTest.Models.DTO;
+﻿using IBISWorld_API.Models;
+using IBISWorld_API.Models.DTO;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 
-namespace IBISWorldTest.Data
+namespace IBISWorld_API.Data
 {
     public class ApplicationDBContext : DbContext
     {

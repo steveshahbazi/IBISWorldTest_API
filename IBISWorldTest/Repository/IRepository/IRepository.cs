@@ -1,7 +1,7 @@
-﻿using IBISWorldTest.Models;
+﻿using IBISWorld_API.Models;
 using System.Linq.Expressions;
 
-namespace IBISWorldTest.Repository.IRepository
+namespace IBISWorld_API.Repository.IRepository
 {
     public interface IRepository<T> where T : class
     {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IBISWorldTest.Models.DTO
+namespace IBISWorld_API.Models.DTO
 {
     public class TermDTO
     {

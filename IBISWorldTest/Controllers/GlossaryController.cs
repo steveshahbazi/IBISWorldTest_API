@@ -1,13 +1,13 @@
 ﻿using AutoMapper;
-using IBISWorldTest.Data;
-using IBISWorldTest.Models;
-using IBISWorldTest.Models.DTO;
-using IBISWorldTest.Repository.IRepository;
+using IBISWorld_API.Data;
+using IBISWorld_API.Models;
+using IBISWorld_API.Models.DTO;
+using IBISWorld_API.Repository.IRepository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 
-namespace IBISWorldTest.Controllers
+namespace IBISWorld_API.Controllers
 {
     [Route("api/glossaryAPI")]
     [ApiController]

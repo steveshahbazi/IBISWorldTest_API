@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace IBISWorldTest.Migrations
+namespace IBISWorld_API.Migrations
 {
     /// <inheritdoc />
     public partial class AddDatesToTermTable : Migration

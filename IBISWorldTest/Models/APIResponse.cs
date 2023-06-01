@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace IBISWorldTest.Models
+namespace IBISWorld_API.Models
 {
     public class APIResponse
     {

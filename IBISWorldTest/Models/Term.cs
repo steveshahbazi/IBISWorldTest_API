@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace IBISWorldTest.Models
+namespace IBISWorld_API.Models
 {
     public class Term
     {

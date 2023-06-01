@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace IBISWorldTest.Migrations
+namespace IBISWorld_API.Migrations
 {
     /// <inheritdoc />
     public partial class AddTermTable : Migration

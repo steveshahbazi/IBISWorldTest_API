@@ -1,11 +1,11 @@
-﻿using IBISWorldTest.Data;
-using IBISWorldTest.Models;
-using IBISWorldTest.Repository.IRepository;
+﻿using IBISWorld_API.Data;
+using IBISWorld_API.Models;
+using IBISWorld_API.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using System.Linq;
 
-namespace IBISWorldTest.Repository
+namespace IBISWorld_API.Repository
 {
     public class Repository<T> : IRepository<T> where T : class
     {
